@@ -1,0 +1,36 @@
+name: run_if_hash_changed
+on: 
+  workflow_dispatch:
+jobs:
+  runonhashchange:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: load cache
+        id: load_cache
+        uses: actions/cache/restore@v4
+        with:
+          path: last_commit_hash.txt
+          key: ${{ runner.os }}-commit-hash-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-commit-hash-
+      - name: read last commit hash
+        id: read_last_hash
+        run: echo "last_commit_hash=$(cat last_commit_hash.txt)" >> $GITHUB_OUTPUT
+      - name: get_commit_hash
+        id: get_commit_hash
+        run: |
+          echo "commit_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "$(git rev-parse HEAD)" > last_commit_hash.txt
+      - name: save new commit hash
+        id: save_new_hash
+        uses: actions/cache/save@v4
+        with:
+          path: last_commit_hash.txt
+          key: ${{ runner.os }}-commit-hash-${{ github.run_id }}
+      - name: echo if hashes are same
+        if: ${{ steps.get_commit_hash.outputs.commit_hash == steps.read_last_hash.outputs.last_commit_hash }}
+        run: echo "hashes are same"
+      - name: echo if hashes are different
+        if: ${{ steps.get_commit_hash.outputs.commit_hash != steps.read_last_hash.outputs.last_commit_hash }}
+        run: echo "hashes are different"
