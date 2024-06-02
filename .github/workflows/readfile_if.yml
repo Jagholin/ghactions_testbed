@@ -1,0 +1,15 @@
+name: readdata_if_test
+on:
+  workflow_dispatch:
+jobs:
+  read_to_var:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: readfile_data
+        id: readfile
+        run: echo "data=$(cat data.txt)" >> $GITHUB_OUTPUT
+      - name: run_if
+        if: ${{ steps.readfile.outputs.data == '1' }}
+        run: echo "data is ${{ steps.readfile.outputs.data }}"
